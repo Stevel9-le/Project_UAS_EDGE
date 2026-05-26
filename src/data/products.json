@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name": "Paket Pelajar 3 Jam (Reguler)",
+    "price": "Rp 12.000",
+    "category": "package",
+    "room": "reguler",
+    "description": "Paket hemat khusus pelajar/mahasiswa. Berlaku jam 06.00 - 18.00 WIB. Wajib menunjukkan kartu pelajar saat billing diaktifkan.",
+    "image": "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    "id": 2,
+    "name": "Paket Begadang Reguler (21.00 - 06.00)",
+    "price": "Rp 30.000",
+    "category": "package",
+    "room": "reguler",
+    "description": "Paket push rank semalaman suntuk di PC Reguler. Free flow air mineral 1 botol dan bonus kupon diskon makanan 10%.",
+    "image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    "id": 3,
+    "name": "Paket Pro VIP 5 Jam",
+    "price": "Rp 35.000",
+    "category": "package",
+    "room": "vip",
+    "description": "Sesi gaming premium tanpa interupsi di VIP Arena. Dilengkapi kursi gaming ergonomis, headset noise-cancelling, dan mechanical keyboard.",
+    "image": "https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    "id": 4,
+    "name": "Paket Begadang VIP (21.00 - 06.00)",
+    "price": "Rp 55.000",
+    "category": "package",
+    "room": "vip",
+    "description": "Pengalaman begadang kasta tertinggi. Akses penuh ke PC spesifikasi tertinggi (RTX 4070 Ti), bebas lag, dan ruangan ber-AC yang nyaman.",
+    "image": "https://images.unsplash.com/photo-1624705002806-5d72df19c3ad?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    "id": 5,
+    "name": "Nasi Goreng Intel Core (Spesial Telur)",
+    "price": "Rp 18.000",
+    "category": "food",
+    "room": "both",
+    "description": "Nasi goreng bumbu racikan khas racikan chef kafe dengan topping telur mata sapi, kerupuk udang, dan suwiran ayam gurih.",
+    "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    "id": 6,
+    "name": "Indomie Gaming Double + Keju",
+    "price": "Rp 15.000",
+    "category": "food",
+    "room": "both",
+    "description": "Dua porsi Indomie goreng legendaris yang dimasak pas, disajikan dengan parutan keju melimpah, telur rebus, dan taburan bawang goreng.",
+    "image": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    "id": 7,
+    "name": "Es Kopi Susu Anti-Lag (Aren)",
+    "price": "Rp 12.000",
+    "category": "drink",
+    "room": "both",
+    "description": "Espresso premium yang dipadukan dengan susu segar creamy dan sirup gula aren murni. Booster kafein terbaik biar mata melek pas clutch.",
+    "image": "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    "id": 8,
+    "name": "Monster Energy Drink Ice",
+    "price": "Rp 25.000",
+    "category": "drink",
+    "room": "vip",
+    "description": "Satu kaleng Monster Energy dingin disajikan dengan es batu di gelas besar. Pilihan utama pro-player untuk fokus penuh.",
+    "image": "data:image/jpeg;base64,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"
+  }
+]
