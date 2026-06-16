@@ -6,25 +6,13 @@ import PageHeader from "../components/PageHeader";
 
 export default function Dashboard() {
     // 🌟 AMBIL DATA & FUNGSI DARI CONTEXT GLOBAL
-    const { currentUser, users, orders, deleteOrder, updateProfilePic } = useAuth();
+    const { currentUser, users, orders, deleteOrder } = useAuth();
     const { search } = useOutletContext();
 
     // JIKA YANG MASUK ADALAH PELANGGAN: Langsung pindahkan/redirect ke page Booking PC
     if (currentUser && currentUser.role === 'pelanggan') {
         return <Navigate to="/booking" replace />;
     }
-
-    const handleUploadPP = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                updateProfilePic(reader.result);
-                alert("Foto profil kamu berhasil diperbarui!");
-            };
-            reader.readAsDataURL(file);
-        }
-    };
 
     // 🌟 FUNGSI HAPUS SEKARANG BERAKSI PADA GLOBAL STATE
     const handleDeleteOrder = (id) => {
@@ -43,10 +31,10 @@ export default function Dashboard() {
             <PageHeader />
 
             {/* BARIS UTAMA INFO */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+            <div className="grid grid-cols-1 gap-6 mt-8">
                 
                 {/* 📊 STATS CARD MULTI-COLOR DENGAN IKON */}
-                <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+                <div className="w-full bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
                     <div className="mb-6">
                         <h2 className="text-xl font-bold">Info ICafe</h2>
                         <p className="text-xs text-gray-400 mt-1">Status dan statistik komputer saat ini</p>
@@ -95,25 +83,6 @@ export default function Dashboard() {
                                 <span className="text-xl font-extrabold block text-[#151D48]">Rp 350k</span>
                                 <span className="text-gray-600 text-xs font-semibold">Hari Ini</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Profil Upload Box */}
-                <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold">Visitor Insights ({currentUser?.role?.toUpperCase()})</h2>
-                        <p className="text-sm text-gray-500 mt-2">Selamat datang di <b>ICafe EDGE</b>.</p>
-                    </div>
-                    
-                    <div className="mt-4 p-4 bg-blue-50 rounded-2xl flex items-center gap-4">
-                        <img src={currentUser?.pp} alt="PP" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
-                        <div>
-                            <p className="text-xs font-bold text-gray-700">Ganti Foto Akun</p>
-                            <label className="text-xs text-blue-600 font-semibold cursor-pointer hover:underline mt-0.5 block">
-                                Upload Baru
-                                <input type="file" accept="image/*" onChange={handleUploadPP} className="hidden" />
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -176,7 +145,7 @@ export default function Dashboard() {
                             ))}
                             {filteredOrders.length === 0 && (
                                 <tr>
-                                    <td colSpan="5" className="p-4 text-center text-gray-400 italic text-xs">Belum ada order pc yang masuk.</td>
+                                    <td colSpan={currentUser?.role === 'pemilik' ? "5" : "4"} className="p-4 text-center text-gray-400 italic text-xs">Belum ada order pc yang masuk.</td>
                                 </tr>
                             )}
                         </tbody>
