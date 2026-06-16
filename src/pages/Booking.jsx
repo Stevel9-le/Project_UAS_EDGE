@@ -5,14 +5,17 @@ import { useAuth } from '../context/AuthContext';
 export default function Booking() {
   const { currentUser } = useAuth(); // Ambil data user aktif (id, name, role)
 
-  // Data State PC Warnet
+  // Data State PC Warnet (Sudah ditambahkan unit baru sesuai kebutuhan Anda)
   const [pcs, setPcs] = useState([
     { id: 'REG-01', type: 'Regular', status: 'available' },
     { id: 'REG-02', type: 'Regular', status: 'occupied' },
     { id: 'REG-03', type: 'Regular', status: 'available' },
+    { id: 'REG-04', type: 'Regular', status: 'available' },
     { id: 'VIP-01', type: 'VIP', status: 'available' },
     { id: 'VIP-02', type: 'VIP', status: 'occupied' },
-  ]);
+    { id: 'VIP-03', type: 'VIP', status: 'available' },
+    { id: 'VIP-04', type: 'VIP', status: 'occupied' },
+  ]); // <-- Kurung kurawal salah yang memutus fungsi komponen tadi sudah dihapus di sini
 
   // Data State Log Hasil Booking (Ditambahkan properti userId & userName untuk rekaman data)
   const [bookings, setBookings] = useState([
@@ -41,8 +44,8 @@ export default function Booking() {
     const newBooking = {
       id: `BKG-00${bookings.length + 1}`,
       pcId: selectedPc,
-      userId: currentUser.id, // Menyimpan id pemesan
-      userName: currentUser.name, // Menyimpan nama pemesan
+      userId: currentUser?.id || 'GUEST', // Ditambahkan optional chaining agar aman jika data telat dimuat
+      userName: currentUser?.name || 'Anonim', 
       duration: duration,
       total: totalPrice,
       time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
@@ -57,7 +60,7 @@ export default function Booking() {
     // Reset form pemilihan
     setSelectedPc(null);
     setDuration(1);
-    alert(`PC Berhasil di-Booking atas nama ${currentUser.name}!`);
+    alert(`PC Berhasil di-Booking atas nama ${currentUser?.name || 'Pelanggan'}!`);
   };
 
   // HANDLER: Batalkan / Hapus Order (Delete Booking)
@@ -70,7 +73,7 @@ export default function Booking() {
   };
 
   // 2. FILTER TRANSAKSI: Jika dia pelanggan, hanya tampilkan booking milik dirinya sendiri
-  const visibleBookings = currentUser.role === 'pelanggan' 
+  const visibleBookings = currentUser?.role === 'pelanggan' 
     ? bookings.filter(b => b.userId === currentUser.id)
     : bookings;
 
@@ -79,7 +82,7 @@ export default function Booking() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-800">Booking Kamar PC</h1>
-        <p className="text-gray-500 text-sm">Akses Akun: <span className="font-bold text-blue-600 uppercase">{currentUser.role}</span></p>
+        <p className="text-gray-500 text-sm">Akses Akun: <span className="font-bold text-blue-600 uppercase">{currentUser?.role || 'Guest'}</span></p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -95,6 +98,7 @@ export default function Booking() {
               return (
                 <button
                   key={pc.id}
+                  type="button"
                   disabled={pc.status === 'occupied'}
                   onClick={() => handleSelectPc(pc)}
                   className={`p-4 border rounded-xl flex flex-col items-center justify-center transition-all ${bgClass}`}
@@ -113,7 +117,7 @@ export default function Booking() {
           <form onSubmit={handleBookingSubmit} className="space-y-4">
             <div>
               <label className="text-xs text-gray-400 block mb-1">Nama Pemesan</label>
-              <input type="text" readOnly value={currentUser.name} className="w-full bg-gray-100 border rounded-xl px-3 py-2 text-sm text-gray-500 font-semibold outline-none" />
+              <input type="text" readOnly value={currentUser?.name || ''} className="w-full bg-gray-100 border rounded-xl px-3 py-2 text-sm text-gray-500 font-semibold outline-none" />
             </div>
             <div>
               <label className="text-xs text-gray-400 block mb-1">PC Target</label>
@@ -135,7 +139,7 @@ export default function Booking() {
       {/* TABEL DAFTAR BILLING AKTIF (READ & DELETE LOG) */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h2 className="text-lg font-semibold mb-4 text-gray-700">
-          {currentUser.role === 'pelanggan' ? 'Riwayat Booking Saya' : 'Daftar Transaksi Booking Aktif Global'}
+          {currentUser?.role === 'pelanggan' ? 'Riwayat Booking Saya' : 'Daftar Transaksi Booking Aktif Global'}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -161,7 +165,7 @@ export default function Booking() {
                   <td className="p-3 font-semibold text-emerald-600">Rp {b.total.toLocaleString()}</td>
                   <td className="p-3 text-center">
                     {/* 3. PROTEKSI AKSI: Pelanggan tidak boleh sembarangan klik 'Stop' kecuali itu miliknya sendiri */}
-                    { (currentUser.role === 'pemilik' || currentUser.role === 'operator' || b.userId === currentUser.id) ? (
+                    { (currentUser?.role === 'pemilik' || currentUser?.role === 'operator' || b.userId === currentUser?.id) ? (
                       <button 
                         onClick={() => handleCancelBooking(b.id, b.pcId)} 
                         className="text-rose-500 hover:text-rose-700 font-medium text-xs bg-rose-50 px-2 py-1 rounded transition-colors"
