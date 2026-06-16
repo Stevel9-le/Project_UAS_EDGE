@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import { useOutletContext, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { FaShoppingCart, FaTruck, FaBan, FaDollarSign, FaTv, FaCrown } from "react-icons/fa";
+import { FaShoppingCart, FaDollarSign, FaTv, FaCrown } from "react-icons/fa";
 import PageHeader from "../components/PageHeader";
 
 export default function Dashboard() {
-    const { currentUser, users, updateProfilePic } = useAuth();
+    // 🌟 AMBIL DATA & FUNGSI DARI CONTEXT GLOBAL
+    const { currentUser, users, orders, deleteOrder, updateProfilePic } = useAuth();
     const { search } = useOutletContext();
 
     // JIKA YANG MASUK ADALAH PELANGGAN: Langsung pindahkan/redirect ke page Booking PC
@@ -13,31 +14,26 @@ export default function Dashboard() {
         return <Navigate to="/booking" replace />;
     }
 
-    // State dummy transaksi iCafe
-    const [orders, setOrders] = useState([
-        { id: 'ORD-001', name: 'Rian Hidayat', pc: 'VIP-01', paket: '3 Jam', status: 'Bermain' },
-        { id: 'ORD-002', name: 'Siti Aminah', pc: 'REG-02', paket: '1 Jam', status: 'Selesai' },
-    ]);
-
     const handleUploadPP = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                updateProfilePic(reader.result); // Update foto profil akun aktif di localstorage
+                updateProfilePic(reader.result);
                 alert("Foto profil kamu berhasil diperbarui!");
             };
             reader.readAsDataURL(file);
         }
     };
 
-    // Fungsi Hapus Transaksi (Hanya untuk Pemilik)
+    // 🌟 FUNGSI HAPUS SEKARANG BERAKSI PADA GLOBAL STATE
     const handleDeleteOrder = (id) => {
         if (window.confirm("Apakah anda yakin ingin menghapus data order ini?")) {
-            setOrders(orders.filter(order => order.id !== id));
+            deleteOrder(id);
         }
     };
 
+    // Filter pencarian otomatis membaca list real-time
     const filteredOrders = orders.filter((order) =>
         order.name.toLowerCase().includes(search.toLowerCase()) || order.id.toLowerCase().includes(search.toLowerCase())
     );
@@ -79,7 +75,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Card 3: Active Orders */}
+                        {/* Card 3: Active Orders (OTOMATIS BERUBAH JUMLAHNYA) */}
                         <div className="bg-[#DCFCE7] rounded-2xl p-5 flex flex-col justify-between min-h-[140px] transition-transform hover:scale-105 duration-300">
                             <div className="w-10 h-10 bg-[#3CD856] rounded-full flex items-center justify-center text-white text-lg shadow-sm">
                                 <FaShoppingCart />
@@ -110,7 +106,6 @@ export default function Dashboard() {
                         <p className="text-sm text-gray-500 mt-2">Selamat datang di <b>ICafe EDGE</b>.</p>
                     </div>
                     
-                    {/* Mengubah PP Akun Sendiri */}
                     <div className="mt-4 p-4 bg-blue-50 rounded-2xl flex items-center gap-4">
                         <img src={currentUser?.pp} alt="PP" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
                         <div>
@@ -124,7 +119,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* FITUR KHUSUS PEMILIK: BISA MELIHAT SEMUA AKUN OPERATOR DAN PELANGGAN */}
+            {/* FITUR KHUSUS PEMILIK: MANAJEMEN AKUN */}
             {currentUser?.role === 'pemilik' && (
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <h3 className="font-bold text-lg mb-4">👑 Manajemen Akun Staf & Pelanggan</h3>
@@ -145,7 +140,7 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* TABEL DATA BILLING (Bisa diakses Pemilik & Operator) */}
+            {/* TABEL DATA BILLING REAL-TIME */}
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                 <h3 className="font-bold text-lg mb-4">Active Order List</h3>
                 <div className="overflow-x-auto">
@@ -170,7 +165,6 @@ export default function Dashboard() {
                                             {order.status}
                                         </span>
                                     </td>
-                                    {/* Aksi Tombol Delete HANYA BOLEH DILIHAT & DIKLIK OLEH PEMILIK */}
                                     {currentUser?.role === 'pemilik' && (
                                         <td className="p-4">
                                             <button onClick={() => handleDeleteOrder(order.id)} className="text-red-500 hover:text-red-700 text-xs font-bold transition-colors">
@@ -180,6 +174,11 @@ export default function Dashboard() {
                                     )}
                                 </tr>
                             ))}
+                            {filteredOrders.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" className="p-4 text-center text-gray-400 italic text-xs">Belum ada order pc yang masuk.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

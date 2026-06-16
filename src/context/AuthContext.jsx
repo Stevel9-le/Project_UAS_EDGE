@@ -9,6 +9,12 @@ const initialUsers = [
     { id: "USR-003", name: "Rian Pelanggan", email: "pelanggan@edge.com", password: "123", role: "pelanggan", pp: "https://avatar.iran.liara.run/public/28" }
 ];
 
+// Data Dummy Awal untuk Transaksi/Order
+const initialOrders = [
+    { id: 'ORD-001', name: 'Rian Hidayat', pc: 'VIP-01', paket: '3 Jam', status: 'Bermain' },
+    { id: 'ORD-002', name: 'Siti Aminah', pc: 'REG-02', paket: '1 Jam', status: 'Selesai' },
+];
+
 export function AuthProvider({ children }) {
     const [users, setUsers] = useState(() => {
         const savedUsers = localStorage.getItem("edge_users");
@@ -20,6 +26,12 @@ export function AuthProvider({ children }) {
         return savedUser ? JSON.parse(savedUser) : null;
     });
 
+    // 🌟 STATE GLOBAL UNTUK PESANAN PC (ORDERS)
+    const [orders, setOrders] = useState(() => {
+        const savedOrders = localStorage.getItem("edge_orders");
+        return savedOrders ? JSON.parse(savedOrders) : initialOrders;
+    });
+
     useEffect(() => {
         localStorage.setItem("edge_users", JSON.stringify(users));
     }, [users]);
@@ -28,6 +40,11 @@ export function AuthProvider({ children }) {
         localStorage.setItem("edge_current_user", JSON.stringify(currentUser));
     }, [currentUser]);
 
+    // 🌟 EFFECT UNTUK MENYIMPAN TRANSAKSI SECARA OTOMATIS
+    useEffect(() => {
+        localStorage.setItem("edge_orders", JSON.stringify(orders));
+    }, [orders]);
+
     // Fungsi Registrasi Akun Baru (Default jadi Pelanggan)
     const registerUser = (name, email, password) => {
         const newUser = {
@@ -35,7 +52,7 @@ export function AuthProvider({ children }) {
             name,
             email,
             password,
-            role: "pelanggan", // Akun baru otomatis jadi pelanggan
+            role: "pelanggan",
             pp: "https://avatar.iran.liara.run/public/28"
         };
         setUsers([...users, newUser]);
@@ -61,18 +78,35 @@ export function AuthProvider({ children }) {
     const updateProfilePic = (newPicBase64) => {
         if (!currentUser) return;
         
-        // Update di list users global
         const updatedUsers = users.map((u) => 
             u.id === currentUser.id ? { ...u, pp: newPicBase64 } : u
         );
         setUsers(updatedUsers);
-
-        // Update di user yang sedang login
         setCurrentUser({ ...currentUser, pp: newPicBase64 });
     };
 
+    // 🌟 FUNGSI BARU: Tambah Order Otomatis dari Halaman Booking
+    const addOrder = (newOrder) => {
+        setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    };
+
+    // 🌟 FUNGSI BARU: Hapus Order dari Halaman Dashboard Pemilik
+    const deleteOrder = (id) => {
+        setOrders((prevOrders) => prevOrders.filter(order => order.id !== id));
+    };
+
     return (
-        <AuthContext.Provider value={{ currentUser, users, loginUser, registerUser, logoutUser, updateProfilePic }}>
+        <AuthContext.Provider value={{ 
+            currentUser, 
+            users, 
+            orders,       // <-- Di-share ke dashboard & booking
+            addOrder,     // <-- Dipanggil saat pelanggan klik order
+            deleteOrder,  // <-- Dipanggil saat pemilik klik hapus
+            loginUser, 
+            registerUser, 
+            logoutUser, 
+            updateProfilePic 
+        }}>
             {children}
         </AuthContext.Provider>
     );

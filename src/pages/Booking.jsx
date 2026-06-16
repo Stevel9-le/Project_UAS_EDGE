@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-// 1. Import hook useAuth untuk mendeteksi siapa yang sedang membuka halaman
+// 1. Ambil state global dari AuthContext agar tersinkronisasi otomatis
 import { useAuth } from '../context/AuthContext';
 
 export default function Booking() {
-  const { currentUser } = useAuth(); // Ambil data user aktif (id, name, role)
+  // Ambil data orders global beserta aksi tambah dan hapusnya
+  const { currentUser, orders, addOrder, deleteOrder } = useAuth();
 
-  // Data State PC Warnet (Sudah ditambahkan unit baru sesuai kebutuhan Anda)
+  // Data State PC Warnet untuk denah lokal di halaman ini
   const [pcs, setPcs] = useState([
     { id: 'REG-01', type: 'Regular', status: 'available' },
     { id: 'REG-02', type: 'Regular', status: 'occupied' },
@@ -15,12 +16,6 @@ export default function Booking() {
     { id: 'VIP-02', type: 'VIP', status: 'occupied' },
     { id: 'VIP-03', type: 'VIP', status: 'available' },
     { id: 'VIP-04', type: 'VIP', status: 'occupied' },
-  ]); // <-- Kurung kurawal salah yang memutus fungsi komponen tadi sudah dihapus di sini
-
-  // Data State Log Hasil Booking (Ditambahkan properti userId & userName untuk rekaman data)
-  const [bookings, setBookings] = useState([
-    { id: 'BKG-001', pcId: 'REG-02', userId: 'USR-003', userName: 'Rian Pelanggan', duration: 3, total: 15000, time: '14:30 WIB' },
-    { id: 'BKG-002', pcId: 'VIP-02', userId: 'USR-999', userName: 'Budi (Offline)', duration: 2, total: 20000, time: '15:10 WIB' },
   ]);
 
   const [selectedPc, setSelectedPc] = useState(null);
@@ -36,25 +31,28 @@ export default function Booking() {
     setBillingType(pc.type);
   };
 
-  // HANDLER: Create Booking Baru
+  // HANDLER: Create Booking Baru ke Server/Context Global
   const handleBookingSubmit = (e) => {
     e.preventDefault();
     if (!selectedPc) return alert("Silakan pilih PC pada denah dahulu!");
 
-    const newBooking = {
-      id: `BKG-00${bookings.length + 1}`,
-      pcId: selectedPc,
-      userId: currentUser?.id || 'GUEST', // Ditambahkan optional chaining agar aman jika data telat dimuat
-      userName: currentUser?.name || 'Anonim', 
-      duration: duration,
+    // Sesuaikan key-nya agar serasi dengan object orders milik Dashboard: (id, name, pc, paket, status)
+    const newOrder = {
+      id: `ORD-00${orders.length + 1}`,
+      name: currentUser?.name || 'Pelanggan Baru',
+      pc: selectedPc,
+      paket: `${duration} Jam`,
+      status: 'Bermain',
+      // Properti tambahan internal untuk filter keamanan akun pelanggan
+      userId: currentUser?.id || 'GUEST',
       total: totalPrice,
       time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
     };
 
-    // Tambah ke history tabel
-    setBookings([newBooking, ...bookings]);
+    // 🚀 Kirim pesanan otomatis ke state global & localStorage
+    addOrder(newOrder); 
     
-    // Ubah status PC di denah jadi occupied
+    // Ubah status monitor denah lokal jadi terisi
     setPcs(pcs.map(pc => pc.id === selectedPc ? { ...pc, status: 'occupied' } : pc));
     
     // Reset form pemilihan
@@ -63,19 +61,19 @@ export default function Booking() {
     alert(`PC Berhasil di-Booking atas nama ${currentUser?.name || 'Pelanggan'}!`);
   };
 
-  // HANDLER: Batalkan / Hapus Order (Delete Booking)
+  // HANDLER: Batalkan / Hapus Order melalui Global Context Action
   const handleCancelBooking = (id, pcId) => {
     if (window.confirm("Batalkan booking untuk order ini?")) {
-      setBookings(bookings.filter(b => b.id !== id));
-      // Kembalikan status PC jadi kosong/available lagi
+      deleteOrder(id); // <-- Menghapus dari global context & dashboard
+      // Kembalikan status PC di denah jadi kosong lagi
       setPcs(pcs.map(pc => pc.id === pcId ? { ...pc, status: 'available' } : pc));
     }
   };
 
-  // 2. FILTER TRANSAKSI: Jika dia pelanggan, hanya tampilkan booking milik dirinya sendiri
+  // 2. FILTER AKSES: Jika dia pelanggan biasa, hanya tampilkan pesanan atas nama dirinya sendiri
   const visibleBookings = currentUser?.role === 'pelanggan' 
-    ? bookings.filter(b => b.userId === currentUser.id)
-    : bookings;
+    ? orders.filter(b => b.userId === currentUser.id || b.name === currentUser.name)
+    : orders;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen space-y-6">
@@ -136,7 +134,7 @@ export default function Booking() {
         </div>
       </div>
 
-      {/* TABEL DAFTAR BILLING AKTIF (READ & DELETE LOG) */}
+      {/* TABEL DAFTAR BILLING AKTIF (SINKRON DENGAN DASHBOARD PEMILIK) */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h2 className="text-lg font-semibold mb-4 text-gray-700">
           {currentUser?.role === 'pelanggan' ? 'Riwayat Booking Saya' : 'Daftar Transaksi Booking Aktif Global'}
@@ -149,7 +147,7 @@ export default function Booking() {
                 <th className="p-3">Nama Pelanggan</th>
                 <th className="p-3">No PC</th>
                 <th className="p-3">Durasi</th>
-                <th className="p-3">Waktu Masuk</th>
+                <th className="p-3">Waktu/Status</th>
                 <th className="p-3">Total Bayar</th>
                 <th className="p-3 text-center">Aksi</th>
               </tr>
@@ -158,16 +156,20 @@ export default function Booking() {
               {visibleBookings.map((b) => (
                 <tr key={b.id} className="hover:bg-gray-50/50">
                   <td className="p-3 text-gray-400">{b.id}</td>
-                  <td className="p-3 font-bold text-gray-800">{b.userName}</td>
-                  <td className="p-3 font-semibold">{b.pcId}</td>
-                  <td className="p-3">{b.duration} Jam</td>
-                  <td className="p-3 font-mono">{b.time}</td>
-                  <td className="p-3 font-semibold text-emerald-600">Rp {b.total.toLocaleString()}</td>
+                  <td className="p-3 font-bold text-gray-800">{b.name}</td>
+                  <td className="p-3 font-semibold">{b.pc}</td>
+                  <td className="p-3">{b.paket}</td>
+                  <td className="p-3">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${b.status === 'Bermain' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {b.status} {b.time ? `(${b.time})` : ''}
+                    </span>
+                  </td>
+                  <td className="p-3 font-semibold text-emerald-600">Rp {(b.total || 0).toLocaleString()}</td>
                   <td className="p-3 text-center">
-                    {/* 3. PROTEKSI AKSI: Pelanggan tidak boleh sembarangan klik 'Stop' kecuali itu miliknya sendiri */}
+                    {/* 3. PROTEKSI AKSI: Hanya pemilik, operator, atau pemilik order itu sendiri yang bisa membatalkan */}
                     { (currentUser?.role === 'pemilik' || currentUser?.role === 'operator' || b.userId === currentUser?.id) ? (
                       <button 
-                        onClick={() => handleCancelBooking(b.id, b.pcId)} 
+                        onClick={() => handleCancelBooking(b.id, b.pc)} 
                         className="text-rose-500 hover:text-rose-700 font-medium text-xs bg-rose-50 px-2 py-1 rounded transition-colors"
                       >
                         Stop / Hapus
